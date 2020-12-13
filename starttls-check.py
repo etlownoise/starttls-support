@@ -1,4 +1,5 @@
 # github.com/etlownoise starttls-check.py Dec/2020
+# Example: python starttls-check.py domains.txt
 
 import sys
 import dns.resolver
