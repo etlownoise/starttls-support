@@ -1,4 +1,5 @@
- 
+# github.com/etlownoise starttls-check.py Dec/2020
+
 import sys
 import dns.resolver
 import smtplib
@@ -17,19 +18,32 @@ with open(sys.argv[1]) as fp:
             break
         #print("Line{}: {}".format(count, line.strip()))    
         resolver = dns.resolver.Resolver()
-        resolver.timeout = 1
-        resolver.lifetime = 1      
+        resolver.nameservers = ['8.8.8.8']
+        resolver.timeout = 10
+        resolver.lifetime = 10      
         try:
             for x in resolver.resolve(line.strip(), 'MX'):
                 resa = line.strip()
                 #print('Host', x.exchange, 'has preference', x.preference)     
                 resb =str(x.exchange)
-                smtp = smtplib.SMTP(timeout=5)
+                smtp = smtplib.SMTP(timeout=10)
                 #smtp.set_debuglevel(2)
                 resc = "UNKNOWN"
                 try:
                     smtp.connect(str(x.exchange),25)
-                    if smtp.has_extn('starttls'):
+                    try:           
+                        smtp.ehlo_or_helo_if_needed()
+                        resc = "YES"
+                    except:    
+                        resc = "NO"
+
+                        try:
+                            smtp.quit()
+                        except smtplib.SMTPServerDisconnected:
+                            resc = "ERROR - DISCONNECTED"
+                            #print("Disconnected")
+
+                    if smtp.has_extn("STARTTLS"):
                        #print("STARTTLS OK")
                        resc = "YES"
                     else:
@@ -37,8 +51,8 @@ with open(sys.argv[1]) as fp:
                        resc = "NO"
                     try:
                         smtp.quit()
-                    except smtplib.SMTPServerDisconnected as error:
-                        resc = "ERROR"
+                    except smtplib.SMTPServerDisconnected:
+                        resc = "ERROR - DISCONNECTED"
                         #print("blahh",error) 
                 except smtplib.SMTPDataError as e:
                     #print('[-] {0}'.format(str(e[1])))
@@ -56,5 +70,3 @@ with open(sys.argv[1]) as fp:
         except:
             resb = "NO MX RECORD"
             print(datetime.datetime.now(),",", line.strip(),",", resb,",",resb) 
-        
-  
