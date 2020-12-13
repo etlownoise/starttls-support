@@ -1,7 +1,4 @@
-# Python program to 
-# demonstrate with 
-# statement 
-  
+ 
 import sys
 import dns.resolver
 import smtplib
